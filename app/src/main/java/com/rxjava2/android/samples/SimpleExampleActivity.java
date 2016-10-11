@@ -9,6 +9,13 @@ import android.widget.TextView;
 
 import com.rxjava2.android.samples.utils.AppConstant;
 
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -39,6 +46,18 @@ public class SimpleExampleActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
+
+    private void doSomeWork1() {
+        getFlowable()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(getSubscriber());
+    }
+
     /*
      * simple example to emit two value one by one
      */
@@ -52,7 +71,10 @@ public class SimpleExampleActivity extends AppCompatActivity {
     }
 
     private Observable<String> getObservable() {
-        return Observable.just("Cricket", "Football");
+        List<String> mList = new ArrayList<>();
+        mList.add("Cricket");
+        mList.add("Football");
+        return Observable.fromIterable(mList);
     }
 
     private Observer<String> getObserver() {
@@ -86,5 +108,38 @@ public class SimpleExampleActivity extends AppCompatActivity {
         };
     }
 
+    private Flowable<String> getFlowable() {
+        return Flowable.just("Cricket", "Football");
+    }
 
+    private Subscriber<String> getSubscriber() {
+        return new Subscriber<String>() {
+            @Override
+            public void onSubscribe(Subscription s) {
+                s.request(2);
+                Log.d(TAG, " onSubscribe : ");
+            }
+
+            @Override
+            public void onNext(String value) {
+                textView.append(" onNext : value : " + value);
+                textView.append(AppConstant.LINE_SEPARATOR);
+                Log.d(TAG, " onNext : value : " + value);
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                textView.append(" onError : " + e.getMessage());
+                textView.append(AppConstant.LINE_SEPARATOR);
+                Log.d(TAG, " onError : " + e.getMessage());
+            }
+
+            @Override
+            public void onComplete() {
+                textView.append(" onComplete");
+                textView.append(AppConstant.LINE_SEPARATOR);
+                Log.d(TAG, " onComplete");
+            }
+        };
+    }
 }
