@@ -17,10 +17,14 @@ import java.util.List;
 
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Action;
 import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subjects.PublishSubject;
 
 /**
  * Created by amitshekhar on 27/08/16.
@@ -41,7 +45,7 @@ public class SimpleExampleActivity extends AppCompatActivity {
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                doSomeWork();
+                doSomeWork2();
             }
         });
     }
@@ -141,5 +145,47 @@ public class SimpleExampleActivity extends AppCompatActivity {
                 Log.d(TAG, " onComplete");
             }
         };
+    }
+
+    private void doSomeWork2(){
+        final PublishSubject<Boolean> mPublishSubject = PublishSubject.create();
+        mPublishSubject.subscribe(new Observer<Boolean>() {
+            @Override
+            public void onSubscribe(Disposable d) {
+
+            }
+
+            @Override
+            public void onNext(Boolean value) {
+
+                Log.e(TAG,"Observable Completed");
+            }
+
+            @Override
+            public void onError(Throwable e) {
+
+            }
+
+            @Override
+            public void onComplete() {
+                Log.e(TAG," onCompleted");
+            }
+        });
+//        mPublishSubject.onNext("Hello world");
+        Observable.create(new ObservableOnSubscribe<Integer>() {
+            @Override
+            public void subscribe(ObservableEmitter<Integer> e) throws Exception {
+                for (int i = 0; i < 5; i++) {
+                    e.onNext(i);
+                    Log.e(TAG,i+"");
+                }
+                e.onComplete();
+            }
+        }).doOnComplete(new Action() {
+            @Override
+            public void run() throws Exception {
+                mPublishSubject.onNext(true);
+            }
+        }).subscribe();
     }
 }
